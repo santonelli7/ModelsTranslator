@@ -7,12 +7,12 @@
 #include <regex>
 #include <Model/Species.h>
 #include <Model/DirConnection.h>
-#include "../utils/exceptions/NoTypeFoundException.cpp"
-#include "../utils/exceptions/NoUnitFoundException.cpp"
-#include "../utils/exceptions/NoModuleFoundException.cpp"
-#include "../utils/exceptions/NoVariableFoundException.cpp"
-#include "../utils/exceptions/NoModuleConnectionException.cpp"
-#include "../utils/exceptions/NotSupportedException.cpp"
+#include "NoTypeFoundException.cpp"
+#include "NoUnitFoundException.cpp"
+#include "NoModuleFoundException.cpp"
+#include "NoVariableFoundException.cpp"
+#include "NoModuleConnectionException.cpp"
+#include "NotSupportedException.cpp"
 
 Parser::Parser(const std::string& filepath) {
     std::cout << "Start parsing..." << std::endl;
@@ -134,7 +134,10 @@ std::string Parser::get_implementation(const xmlpp::Node *var, bool extra_implem
 				result = result + "\telse\n";
 			result = result + "\t" + get_implementation_in_conditional(children[1]) + ";\n";
 		}
-		result = result + "\tend when";
+		if (extra_implementation)
+			result = result + "\tend when";
+		else
+			result = result + "\tend if";
 	}
 	return result;
 }

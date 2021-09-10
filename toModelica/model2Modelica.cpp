@@ -14,10 +14,23 @@ model2Modelica::model2Modelica(const std::string& filepath, std::unordered_map<s
 
 	std::cout << "Generating Modelica files..." << std::endl;
 
-	std::string modelName = "system";
-	if (modules["system"]->getVars().empty()) {
+	std::string modelName;
+
+	unsigned int caps = 0;
+	for (auto const& mod : modules) {
+		std::size_t found = mod.second->getName().find("capsule_");
+		if (found != std::string::npos) {
+			caps += 1;
+			modelName = mod.second->getName();
+		}
+	}
+
+	if (!modules["system"]->getVars().empty()) {
+		modelName = "system";
+	} else {
 		modules.erase("system");
-		modelName = "model_name";
+		if (caps != 1)
+			modelName = "model_name";
 	}
 
 	std::vector<std::pair<std::string, std::shared_ptr<Modeling::Module>>> mods(modules.begin(), modules.end());
@@ -96,9 +109,10 @@ model2Modelica::model2Modelica(const std::string& filepath, std::unordered_map<s
 
 	std::ofstream makefile;
 	makefile.open (std::string(filepath.substr(0,filepath.rfind('/')) + "/" + "Makefile"));
-	makefile << "start:\n\tomc run.mos\n\nclean:\n\tfind . ! -name \"Makefile\" -and ! -name \"*.mo*\" ! -name \"*.phml\" -delete";
+	makefile << "start:\n\tomc run.mos\n\nclean:\n\tfind . ! -name \"Makefile\" -and ! -name \"*.mo*\" ! -name \"*.phml\" ! -name \"*.csv\" -delete";
 	makefile.close();
-	run << "simulate(" << modelName << ", stopTime=" << stopTime << ", method=\"" << method << "\");\ngetErrorString();\n\nplot({put_here_the_parameters_you_want_to_plot}, externalWindow=true);\ngetErrorString();";
+	std::string numberOfIntervals = stopTime + "000";
+	run << "simulate(" << modelName << ", stopTime=" << stopTime << ", method=\"" << method << "\", numberOfIntervals=" << numberOfIntervals << ", outputFormat=\"csv\");\ngetErrorString();";
 	run.close();
 
 	std::cout << "Modelica files have been generated." << std::endl;
